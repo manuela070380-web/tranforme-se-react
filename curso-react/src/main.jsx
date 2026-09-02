@@ -17,7 +17,7 @@ install({
     extend: {
       colors: {
         primary: '#5782AD',
-        secondary: '#B3D9FF',
+        secondary: '#9ec8f1',
       }
     }
   }
