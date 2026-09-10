@@ -74,14 +74,14 @@ function Painel() {
                         {isEdit ? (
                             <form className="flex flex-col">
                                 Nome:
-                                <input onChange={(e) => setUser({ ...user, nome: e.target.value })} type="text" placeholder="Digite seu nome completo" />
+                                <input value={user.nome} onChange={(e) => setUser({ ...user, nome: e.target.value })} type="text" placeholder="Digite seu nome completo" />
                                 Email:
-                                <input onChange={(e) => setUser({ ...user, email: e.target.value })} type="email" placeholder="Digite o seu melhor email" />
+                                <input value={user.email} onChange={(e) => setUser({ ...user, email: e.target.value })} type="email" placeholder="Digite o seu melhor email" />
 
                                 Senha:
                                 <input onChange={(e) => setUser({ ...user, senha: e.target.value })} type="password" placeholder="Letra maiúscula e números" />
                                 Data de nascimento:
-                                <input onChange={(e) => setUser({ ...user, nascimento: e.target.value })} type="date" />
+                                <input value={user.nascimento} onChange={(e) => setUser({ ...user, nascimento: e.target.value })} type="date" />
 
                                 { index!= -1 &&(
                                 <a onClick={() => {setIsEdit(false)}} 
