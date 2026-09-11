@@ -21,6 +21,12 @@ function Painel() {
         if (usersTemp) setUsers(usersTemp)
     }, [])
 
+    function deleteUser(i){
+        const newUser = users.filter((u, i) => {
+            return i != index
+        })
+    }
+
     function updateUser(indice) {
         setModal(true)
         setUser(users[indice])
