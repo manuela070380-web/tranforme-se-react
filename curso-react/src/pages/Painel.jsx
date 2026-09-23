@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router';
+import { supabase } from '../../utils/supabase';
 
 function Painel() {
     const [modal, setModal] = useState(false) //bollean
@@ -7,7 +8,10 @@ function Painel() {
     const [user, setUser] = useState({}) //objeto
     const [logged, setLogged] = useState({})
     const [isEdit, setIsEdit] = useState(true)
-    const [index, setIndex] = useState(-1)
+    const [index, setIndex] = useState(-1);
+
+    const {spiner, setRoda} = useState(false);
+    const {msg, setMsg} = useState('');
 
     useEffect(() => {
         const dadosLogado = JSON.parse(localStorage.getItem('logado'))
@@ -19,13 +23,18 @@ function Painel() {
         const usersTemp = JSON.parse(localStorage.getItem('users'))
         console.log(usersTemp)
         if (usersTemp) setUsers(usersTemp)
-    }, [])
+    }, []);
 
     function deleteUser(i){
         const newUser = users.filter((u, i) => {
             return i != index
         })
+        
+        setUsers(newUsers)
+        localStorage.setItem('users', JSON.stringify(newUsers))
     }
+
+
 
     function updateUser(indice) {
         setModal(true)
@@ -33,22 +42,53 @@ function Painel() {
         setIndex(indice)
     }
 
-    function handleRegister() {
-        let newUsers
-        if(index !=-1){
-            newUsers = [...users]
-            newUsers[index] = user;
-        }else{
-             newUsers = [...users, user]
+    
+
+
+    async function handleRegister() {
+       setRoda(true)
+        const {data: authData,error: authError} = await supabase.auth.signUp({
+            email: user.email,
+            password: user.email
+        });
+
+        if(authError){
+        
+            setMsg(authError.message)
+            setRoda(false)
+            return;
         }
 
+        if(!authData){
+            setMsg("Não foi possível cadastrar, verifique a internet")
+            setRoda(false)
+            return;
+        }
         
-        setUsers(newUsers)
-        localStorage.setItem('users', JSON.stringify(newUsers))
-        setUser({})
-        setModal(false)
-        setIndex(-1 )
-        setIsEdit(false)
+        const{
+            data: loginData,error:loginError
+        } = await supabase.auth.signInWithPassword({
+            email: user.email,
+            password: user.senha
+        })
+        const{error: profileError} = await supabase
+        .from('profiles')
+        .insert({
+            user_id: loginData.user.id,
+            full_name: user.nome,
+            birth: user.nascimento,
+            cp: user.cpf
+        });
+
+        if(profileError){
+        
+            setMsg(profileError.message)
+            setRoda(false)
+            return;
+        }
+
+
+        
     }
 
     return (
@@ -72,6 +112,7 @@ function Painel() {
                             className="bg-prices absolute top-0 right-0 px-2 
                             rounded-full cursor-pointer">
                             X
+                  
                         </a>
 
                         <h2>Cadastre um novo usuário</h2>
@@ -89,11 +130,15 @@ function Painel() {
                                 Data de nascimento:
                                 <input value={user.nascimento} onChange={(e) => setUser({ ...user, nascimento: e.target.value })} type="date" />
 
+                                Matrícula:
+                                <input value={user.ra} onChange={(e) => setUser({ ...user, ra: e.target.value })} type="text" placeholder="Digite seu nome RA" />
+
                                 { index!= -1 &&(
                                 <a onClick={() => {setIsEdit(false)}} 
                                 className="mt-5 bg-primary text-white text-center rounded-md py-2 bg-red-300">Cancelar</a>)}
 
-                                <a onClick={handleRegister} className="mt-5 bg-primary text-white text-center rounded-md py-2">Salvar</a>
+                                <a onClick={handleRegister} className="mt-5 bg-primary text-white text-center rounded-md py-2">{spiner?"...":"Salvar"}</a>
+                                {msg}
                             </form>) :
                             (
                                 <>
