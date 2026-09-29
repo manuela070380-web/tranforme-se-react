@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router';
 import { supabase } from '../../utils/supabase';
 
 function Painel() {
@@ -10,8 +9,8 @@ function Painel() {
     const [isEdit, setIsEdit] = useState(true)
     const [index, setIndex] = useState(-1);
 
-    const {spiner, setRoda} = useState(false);
-    const {msg, setMsg} = useState('');
+    const [spiner, setRoda] = useState(false);
+    const [msg, setMsg] = useState('');
 
     useEffect(() => {
         const dadosLogado = JSON.parse(localStorage.getItem('logado'))
@@ -24,14 +23,37 @@ function Painel() {
         console.log(usersTemp)
         if (usersTemp) setUsers(usersTemp)
     }, []);
+    function loadUser(){
+        const {data, error} = supabase.from('profile').select('*')
+        if(error){
+            setMsg(error.message)
+            return;
+        }
+        setUsers(data)
+
+    }
+         async function editUser(){
+        setSpiner(true)
+        const { data, error } = await supabase
+            .from('profiles')
+            .update(user)
+            .eq('id', index);
+
+        if(error){
+            setMsg(error.message)
+            setSpiner(false)
+            return;
+        }
+
+        setMsg("Usuario editado")
+        setSpiner(false)
+        loadUsers()
+    }
+
+
+
 
     function deleteUser(i){
-        const newUser = users.filter((u, i) => {
-            return i != index
-        })
-        
-        setUsers(newUsers)
-        localStorage.setItem('users', JSON.stringify(newUsers))
     }
 
 
@@ -42,22 +64,19 @@ function Painel() {
         setIndex(indice)
     }
 
-    
-
-
-    async function handleRegister() {
-       setRoda(true)
-        const {data: authData,error: authError} = await supabase.auth.signUp({
+    async function handleRegister(){
+        setSpiner(true)
+        const { data: authData, error: authError } = await supabase.auth.signUp({
             email: user.email,
-            password: user.email
+            password: user.password
         });
 
         if(authError){
-        
             setMsg(authError.message)
-            setRoda(false)
+            setSpiner(false)
             return;
         }
+        
 
         if(!authData){
             setMsg("Não foi possível cadastrar, verifique a internet")
@@ -71,13 +90,14 @@ function Painel() {
             email: user.email,
             password: user.senha
         })
+
         const{error: profileError} = await supabase
         .from('profiles')
         .insert({
             user_id: loginData.user.id,
-            full_name: user.nome,
-            birth: user.nascimento,
-            cp: user.cpf
+            name: user.name,
+            birth_date: user.nascimento,
+            ra: user.ra
         });
 
         if(profileError){
@@ -86,14 +106,14 @@ function Painel() {
             setRoda(false)
             return;
         }
-
-
+        setRoda(false)
+        setMsg("Usuário cadastrado com sucesso")
         
     }
 
     return (
         <div>
-            <h3 >Ola, {logged?.nome}</h3>
+            <h3 >Ola, {logged?.name}</h3>
 
             {modal && (
                 <div
@@ -120,8 +140,8 @@ function Painel() {
 
                         {isEdit ? (
                             <form className="flex flex-col">
-                                Nome:
-                                <input value={user.nome} onChange={(e) => setUser({ ...user, nome: e.target.value })} type="text" placeholder="Digite seu nome completo" />
+                                name:
+                                <input value={user.name} onChange={(e) => setUser({ ...user, name: e.target.value })} type="text" placeholder="Digite seu name completo" />
                                 Email:
                                 <input value={user.email} onChange={(e) => setUser({ ...user, email: e.target.value })} type="email" placeholder="Digite o seu melhor email" />
 
@@ -131,7 +151,7 @@ function Painel() {
                                 <input value={user.nascimento} onChange={(e) => setUser({ ...user, nascimento: e.target.value })} type="date" />
 
                                 Matrícula:
-                                <input value={user.ra} onChange={(e) => setUser({ ...user, ra: e.target.value })} type="text" placeholder="Digite seu nome RA" />
+                                <input value={user.ra} onChange={(e) => setUser({ ...user, ra: e.target.value })} type="text" placeholder="Digite seu name RA" />
 
                                 { index!= -1 &&(
                                 <a onClick={() => {setIsEdit(false)}} 
@@ -142,7 +162,7 @@ function Painel() {
                             </form>) :
                             (
                                 <>
-                                    <p>Nome: {user.nome}</p> 
+                                    <p>name: {user.name}</p> 
                                      <p>Email: {user.email}</p> 
                                       <p>  Data de nascimento:: {user.nascimento}</p> 
                                        <a onClick={() => {setIsEdit(true)}} 
@@ -151,7 +171,7 @@ function Painel() {
                             )
                         }
 
-
+                        
                     </div>
                 </div>
             )}
@@ -165,7 +185,7 @@ function Painel() {
 
             <table>
                 <thead>
-                    <th>Nome</th>
+                    <th>name</th>
                     <th>Email</th>
                     <th>Ações</th>
                 </thead>
@@ -173,7 +193,7 @@ function Painel() {
 
                     {users.map((u,i) => (
                         <tr>
-                            <td>{u.nome}</td>
+                            <td>{u.name}</td>
                             <td>{u.email}</td>
                             <td>
                                 <a className='cursor-pointer
@@ -184,7 +204,7 @@ function Painel() {
                                        text-white
                                        rounded-full
                                        bg-green-500'
-                                    onClick={() => updateUser(i)}
+                                    onClick={() => updateUser(u)}
                                 >V</a>
                                 <a className='cursor-pointer
                                        px-2
@@ -194,7 +214,7 @@ function Painel() {
                                        text-white
                                        rounded-full
                                        bg-red-500'
-                                       
+                                       onClick={() => deleteUser(u)}
                                 >X</a>
                             </td>
                         </tr>
