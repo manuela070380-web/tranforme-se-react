@@ -1,17 +1,11 @@
 import { Link } from "react-router";
+import { Template } from "../components/Template";
 function Home() {
 
     return (
         <>
-            <nav className="py-2 flex items-center px-4 fixed  top-0 w-full shadow bg-secondary text-white">
-
-                <a className="p-2 mr-2 hover:bg-primary" href="#about">Sobre</a>
-                <a className="p-2 mr-2 hover:bg-primary" href="#prices">Preços</a>
-                <a className="p-2 mr-2 hover:bg-primary" href="#features">Benefícios</a>
-                <Link className="p-2 mr-5 px-4 bg-primary hover:shadow-inner text-white rounded  ml-auto shadow" to="/auth">Acessar</Link>
-            </nav>
-
-            <main>
+            <Template>
+            <main className="p-8">
                 <section>
                     <div className="max-w-lg mx-auto py-6">
                         <h1 className="text-center p-6">duoLIBRAS</h1>
@@ -78,10 +72,9 @@ function Home() {
                 </section>
 
             </main>
+            </Template>
 
-            <footer>
-
-            </footer>
+          
         </>
     )
 
